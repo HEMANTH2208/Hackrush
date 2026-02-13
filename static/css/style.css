@@ -1,0 +1,139 @@
+body {
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.navbar {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.card {
+    border: none;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+.card-header {
+    border-radius: 10px 10px 0 0 !important;
+}
+
+.risk-score {
+    font-size: 3rem;
+    font-weight: bold;
+    text-align: center;
+    padding: 20px;
+    border-radius: 10px;
+    margin: 20px 0;
+}
+
+.risk-critical {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    color: white;
+}
+
+.risk-high {
+    background: linear-gradient(135deg, #fd7e14 0%, #e8590c 100%);
+    color: white;
+}
+
+.risk-moderate {
+    background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+    color: white;
+}
+
+.risk-low {
+    background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+    color: white;
+}
+
+.component-score {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    margin: 5px 0;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+}
+
+.evidence-item {
+    padding: 10px;
+    margin: 5px 0;
+    border-left: 4px solid #dc3545;
+    background-color: #fff3cd;
+    border-radius: 3px;
+}
+
+.evidence-high {
+    border-left-color: #dc3545;
+}
+
+.evidence-medium {
+    border-left-color: #ffc107;
+}
+
+.evidence-low {
+    border-left-color: #17a2b8;
+}
+
+.badge-custom {
+    padding: 8px 12px;
+    font-size: 0.9rem;
+}
+
+.recommendation-box {
+    padding: 15px;
+    border-radius: 8px;
+    margin: 15px 0;
+    font-weight: 500;
+}
+
+.btn-download {
+    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+    color: white;
+    border: none;
+}
+
+.btn-download:hover {
+    background: linear-gradient(135deg, #5a6268 0%, #545b62 100%);
+    color: white;
+}
+
+.progress {
+    height: 25px;
+    border-radius: 5px;
+}
+
+.progress-bar {
+    font-weight: bold;
+}
+
+.rule-match {
+    background-color: #f8d7da;
+    padding: 8px;
+    margin: 5px 0;
+    border-radius: 5px;
+    border-left: 3px solid #dc3545;
+}
+
+.verification-status {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.verified {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.not-verified {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.section-divider {
+    border-top: 2px solid #dee2e6;
+    margin: 20px 0;
+}

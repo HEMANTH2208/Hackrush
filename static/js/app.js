@@ -25,37 +25,35 @@ function showToast(type, message) {
     toast.show();
 }
 
-// Load sample data with animation
+// Load sample data
 function loadScamSample() {
-    const form = document.getElementById('analysisForm');
-    form.classList.add('animate__animated', 'animate__pulse');
-    
     document.getElementById('jobText').value = scamSample.jobText;
     document.getElementById('companyName').value = scamSample.companyName;
     document.getElementById('recruiterEmail').value = scamSample.recruiterEmail;
     document.getElementById('contactMethod').value = scamSample.contactMethod;
     document.getElementById('offeredSalary').value = scamSample.offeredSalary;
     
-    setTimeout(() => {
-        form.classList.remove('animate__animated', 'animate__pulse');
-    }, 1000);
+    // Show advanced options
+    const advancedOptions = document.getElementById('advancedOptions');
+    if (!advancedOptions.classList.contains('show')) {
+        new bootstrap.Collapse(advancedOptions).show();
+    }
     
     showToast('success', 'Scam example loaded! Click "Analyze for Fraud" to see results.');
 }
 
 function loadLegitSample() {
-    const form = document.getElementById('analysisForm');
-    form.classList.add('animate__animated', 'animate__pulse');
-    
     document.getElementById('jobText').value = legitSample.jobText;
     document.getElementById('companyName').value = legitSample.companyName;
     document.getElementById('recruiterEmail').value = legitSample.recruiterEmail;
     document.getElementById('contactMethod').value = legitSample.contactMethod;
     document.getElementById('offeredSalary').value = legitSample.offeredSalary;
     
-    setTimeout(() => {
-        form.classList.remove('animate__animated', 'animate__pulse');
-    }, 1000);
+    // Show advanced options
+    const advancedOptions = document.getElementById('advancedOptions');
+    if (!advancedOptions.classList.contains('show')) {
+        new bootstrap.Collapse(advancedOptions).show();
+    }
     
     showToast('success', 'Legitimate example loaded! Click "Analyze for Fraud" to compare.');
 }
@@ -76,12 +74,11 @@ document.getElementById('analysisForm').addEventListener('submit', async (e) => 
         return;
     }
     
-    // Hide placeholder and results, show loading
-    document.getElementById('placeholderCard').style.display = 'none';
+    // Hide results, show loading
     document.getElementById('resultsCard').style.display = 'none';
     document.getElementById('loadingCard').style.display = 'block';
     
-    // Scroll to results
+    // Scroll to loading card
     document.getElementById('loadingCard').scrollIntoView({ behavior: 'smooth', block: 'center' });
     
     // Collect form data
@@ -115,7 +112,6 @@ document.getElementById('analysisForm').addEventListener('submit', async (e) => 
     } catch (error) {
         console.error('Error:', error);
         document.getElementById('loadingCard').style.display = 'none';
-        document.getElementById('placeholderCard').style.display = 'block';
         showToast('error', 'Error: ' + error.message + '. Please try again or train models first.');
     }
 });
@@ -425,10 +421,17 @@ function displayResults(data) {
 
 // Helper functions
 function getRiskClass(tier) {
-    if (tier.includes('CRITICAL')) return 'risk-critical bg-danger';
-    if (tier.includes('HIGH')) return 'risk-high bg-warning';
-    if (tier.includes('MODERATE')) return 'risk-moderate bg-warning';
-    return 'risk-low bg-success';
+    if (tier.includes('CRITICAL')) return 'bg-danger';
+    if (tier.includes('HIGH')) return 'bg-warning';
+    if (tier.includes('MODERATE')) return 'bg-warning';
+    return 'bg-success';
+}
+
+function getRiskScoreClass(tier) {
+    if (tier.includes('CRITICAL')) return 'risk-critical';
+    if (tier.includes('HIGH')) return 'risk-high';
+    if (tier.includes('MODERATE')) return 'risk-moderate';
+    return 'risk-low';
 }
 
 function formatRiskTier(tier) {
@@ -462,11 +465,11 @@ async function trainModels() {
     }
     
     btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Training Models...';
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Training...';
     
-    // Update status
-    document.getElementById('statusSpinner').style.display = 'inline-block';
-    document.getElementById('statusText').textContent = 'Training...';
+    // Update nav status
+    document.getElementById('navStatusSpinner').style.display = 'inline-block';
+    document.getElementById('navStatusText').textContent = 'Training...';
     
     try {
         const response = await fetch('/train', { method: 'POST' });
@@ -474,17 +477,15 @@ async function trainModels() {
         
         if (response.ok) {
             showToast('success', `Models trained successfully! Best Model: ${result.best_model}`);
-            document.getElementById('statusText').textContent = 'Trained ✓';
-            document.getElementById('statusSpinner').style.display = 'none';
-            document.getElementById('modelStatus').classList.remove('bg-secondary');
-            document.getElementById('modelStatus').classList.add('bg-success');
+            document.getElementById('navStatusText').textContent = 'Ready ✓';
+            document.getElementById('navStatusSpinner').style.display = 'none';
             
             // Hide alert after success
             setTimeout(() => {
-                const alert = document.querySelector('.alert-info');
+                const alert = document.querySelector('#setupAlert .alert');
                 if (alert) {
-                    alert.classList.add('animate__animated', 'animate__fadeOut');
-                    setTimeout(() => alert.remove(), 1000);
+                    alert.classList.add('fade');
+                    setTimeout(() => document.getElementById('setupAlert').remove(), 500);
                 }
             }, 2000);
         } else {
@@ -492,8 +493,8 @@ async function trainModels() {
         }
     } catch (error) {
         showToast('error', 'Error training models: ' + error.message);
-        document.getElementById('statusText').textContent = 'Failed ✗';
-        document.getElementById('statusSpinner').style.display = 'none';
+        document.getElementById('navStatusText').textContent = 'Error';
+        document.getElementById('navStatusSpinner').style.display = 'none';
     } finally {
         btn.disabled = false;
         btn.innerHTML = originalHTML;
@@ -507,9 +508,12 @@ window.addEventListener('DOMContentLoaded', async () => {
         const result = await response.json();
         
         if (result.ml_model_loaded) {
-            document.getElementById('statusText').textContent = `Trained ✓ (${result.model_name})`;
-            document.getElementById('modelStatus').classList.remove('bg-secondary');
-            document.getElementById('modelStatus').classList.add('bg-success');
+            document.getElementById('navStatusText').textContent = `Ready ✓`;
+            // Hide setup alert if models are loaded
+            const setupAlert = document.getElementById('setupAlert');
+            if (setupAlert) {
+                setupAlert.style.display = 'none';
+            }
         }
     } catch (error) {
         console.error('Error checking model status:', error);

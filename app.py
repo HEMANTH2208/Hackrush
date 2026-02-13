@@ -54,46 +54,90 @@ def analyze_job():
         if not job_text:
             return jsonify({'error': 'Job text is required'}), 400
         
+        if len(job_text) < 20:
+            return jsonify({'error': 'Job text is too short. Please provide more details.'}), 400
+        
         # 1. Preprocess text
-        preprocessed_text = preprocessor.preprocess(job_text)
-        text_features = preprocessor.extract_features(job_text)
+        try:
+            preprocessed_text = preprocessor.preprocess(job_text)
+            text_features = preprocessor.extract_features(job_text)
+        except Exception as e:
+            print(f"Preprocessing error: {e}")
+            preprocessed_text = job_text.lower()
+            text_features = {}
         
         # 2. ML Classification
-        ml_result = ml_classifier.predict(preprocessed_text)
+        try:
+            ml_result = ml_classifier.predict(preprocessed_text)
+        except Exception as e:
+            print(f"ML classification error: {e}")
+            ml_result = {
+                'is_scam': False,
+                'probability': 50.0,
+                'confidence': 'low',
+                'model': 'default'
+            }
         
         # 3. Rule-based detection
-        rule_result = rule_engine.check_rules(job_text)
-        evidence = rule_engine.get_evidence(job_text, rule_result['triggered_rules'])
+        try:
+            rule_result = rule_engine.check_rules(job_text)
+            evidence = rule_engine.get_evidence(job_text, rule_result['triggered_rules'])
+        except Exception as e:
+            print(f"Rule engine error: {e}")
+            rule_result = {'triggered_rules': [], 'rule_score': 0, 'high_confidence_scam': False}
+            evidence = []
         
         # 4. Company verification
         company_result = {'found': False, 'confidence': 50}
         if company_name:
-            company_result = company_verifier.verify_company(company_name)
-            if recruiter_email:
-                email_match = company_verifier.verify_email_domain(recruiter_email, company_name)
-                company_result['email_match'] = email_match
+            try:
+                company_result = company_verifier.verify_company(company_name)
+                if recruiter_email:
+                    email_match = company_verifier.verify_email_domain(recruiter_email, company_name)
+                    company_result['email_match'] = email_match
+            except Exception as e:
+                print(f"Company verification error: {e}")
+                company_result = {'found': False, 'confidence': 50, 'message': 'Verification unavailable'}
         
         # 5. Salary analysis
-        salary_result = salary_analyzer.analyze_salary(job_text, offered_salary)
+        try:
+            salary_result = salary_analyzer.analyze_salary(job_text, offered_salary)
+        except Exception as e:
+            print(f"Salary analysis error: {e}")
+            salary_result = {'anomaly_detected': False, 'anomaly_score': 0, 'message': 'Analysis unavailable'}
         
         # 6. Recruiter scoring
-        recruiter_result = recruiter_scorer.score_recruiter(
-            email=recruiter_email,
-            contact_method=contact_method,
-            linkedin_url=linkedin_url
-        )
+        try:
+            recruiter_result = recruiter_scorer.score_recruiter(
+                email=recruiter_email,
+                contact_method=contact_method,
+                linkedin_url=linkedin_url
+            )
+        except Exception as e:
+            print(f"Recruiter scoring error: {e}")
+            recruiter_result = {'trust_score': 50, 'trust_level': 'MODERATE_TRUST', 'factors': []}
         
         # 7. Risk fusion
-        risk_signals = {
-            'ml_probability': ml_result['probability'],
-            'rule_score': rule_result['rule_score'],
-            'company_confidence': company_result.get('confidence', 50),
-            'salary_anomaly_score': salary_result.get('anomaly_score', 0),
-            'recruiter_trust_score': recruiter_result['trust_score']
-        }
-        
-        risk_result = risk_fusion.calculate_risk_score(risk_signals)
-        explanations = risk_fusion.get_explanation(risk_signals, risk_result)
+        try:
+            risk_signals = {
+                'ml_probability': ml_result['probability'],
+                'rule_score': rule_result['rule_score'],
+                'company_confidence': company_result.get('confidence', 50),
+                'salary_anomaly_score': salary_result.get('anomaly_score', 0),
+                'recruiter_trust_score': recruiter_result['trust_score']
+            }
+            
+            risk_result = risk_fusion.calculate_risk_score(risk_signals)
+            explanations = risk_fusion.get_explanation(risk_signals, risk_result)
+        except Exception as e:
+            print(f"Risk fusion error: {e}")
+            risk_result = {
+                'risk_score': 50.0,
+                'risk_tier': 'MODERATE_RISK',
+                'recommendation': 'Unable to complete full analysis',
+                'component_scores': {}
+            }
+            explanations = []
         
         # Compile final result
         analysis_result = {
@@ -112,13 +156,20 @@ def analyze_job():
         }
         
         # 8. Generate PDF report
-        pdf_path = pdf_generator.generate_report(analysis_result, job_text)
-        analysis_result['pdf_report'] = os.path.basename(pdf_path)
+        try:
+            pdf_path = pdf_generator.generate_report(analysis_result, job_text)
+            analysis_result['pdf_report'] = os.path.basename(pdf_path)
+        except Exception as e:
+            print(f"PDF generation error: {e}")
+            analysis_result['pdf_report'] = 'report_unavailable.pdf'
         
         return jsonify(analysis_result)
     
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        print(f"General error in analyze_job: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'Analysis failed: {str(e)}'}), 500
 
 @app.route('/download/<filename>')
 def download_report(filename):

@@ -20,7 +20,7 @@ function showToast(type, message) {
     const toastId = type === 'success' ? 'successToast' : 'errorToast';
     const messageId = type === 'success' ? 'successMessage' : 'errorMessage';
     
-    document.getElementById(messageId).textContent = message;
+    document.getElementById(messageId).textContent = message.toUpperCase();
     const toast = new bootstrap.Toast(document.getElementById(toastId));
     toast.show();
 }
@@ -58,20 +58,70 @@ function loadLegitSample() {
     showToast('success', 'Legitimate example loaded! Click "Analyze for Fraud" to compare.');
 }
 
-// Enhanced form submission with better error handling
-document.getElementById('analysisForm').addEventListener('submit', async (e) => {
+// Enhanced form submission for text input
+document.getElementById('textAnalysisForm').addEventListener('submit', async (e) => {
     e.preventDefault();
+    await analyzeJob('text');
+});
+
+// Link analysis form
+document.getElementById('linkAnalysisForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    await analyzeJob('link');
+});
+
+// WhatsApp analysis form
+document.getElementById('whatsappAnalysisForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    await analyzeJob('whatsapp');
+});
+
+// Main analysis function
+async function analyzeJob(inputType) {
+    let formData = { input_type: inputType };
     
-    // Validate job text
-    const jobText = document.getElementById('jobText').value.trim();
-    if (!jobText) {
-        showToast('error', 'Please enter job description text');
-        return;
-    }
-    
-    if (jobText.length < 20) {
-        showToast('error', 'Job description is too short. Please provide more details.');
-        return;
+    // Validate and collect data based on input type
+    if (inputType === 'text') {
+        const jobText = document.getElementById('jobText').value.trim();
+        if (!jobText) {
+            showToast('error', 'PLEASE ENTER JOB DESCRIPTION TEXT');
+            return;
+        }
+        if (jobText.length < 20) {
+            showToast('error', 'JOB DESCRIPTION IS TOO SHORT. PROVIDE MORE DETAILS.');
+            return;
+        }
+        
+        formData.job_text = jobText;
+        formData.company_name = document.getElementById('companyName').value.trim();
+        formData.recruiter_email = document.getElementById('recruiterEmail').value.trim();
+        formData.contact_method = document.getElementById('contactMethod').value;
+        formData.linkedin_url = document.getElementById('linkedinUrl').value.trim();
+        formData.offered_salary = document.getElementById('offeredSalary').value ? 
+            parseInt(document.getElementById('offeredSalary').value) : null;
+    } else if (inputType === 'link') {
+        const jobLink = document.getElementById('jobLink').value.trim();
+        if (!jobLink) {
+            showToast('error', 'PLEASE ENTER JOB POSTING URL');
+            return;
+        }
+        if (!jobLink.startsWith('http')) {
+            showToast('error', 'PLEASE ENTER A VALID URL (STARTING WITH HTTP:// OR HTTPS://)');
+            return;
+        }
+        formData.job_link = jobLink;
+    } else if (inputType === 'whatsapp') {
+        const whatsappText = document.getElementById('whatsappText').value.trim();
+        if (!whatsappText) {
+            showToast('error', 'PLEASE ENTER WHATSAPP MESSAGE');
+            return;
+        }
+        if (whatsappText.length < 20) {
+            showToast('error', 'WHATSAPP MESSAGE IS TOO SHORT. PROVIDE MORE DETAILS.');
+            return;
+        }
+        formData.whatsapp_text = whatsappText;
+        formData.whatsapp_number = document.getElementById('whatsappNumber').value.trim();
     }
     
     // Hide results, show loading
@@ -80,17 +130,6 @@ document.getElementById('analysisForm').addEventListener('submit', async (e) => 
     
     // Scroll to loading card
     document.getElementById('loadingCard').scrollIntoView({ behavior: 'smooth', block: 'center' });
-    
-    // Collect form data
-    const formData = {
-        job_text: jobText,
-        company_name: document.getElementById('companyName').value.trim(),
-        recruiter_email: document.getElementById('recruiterEmail').value.trim(),
-        contact_method: document.getElementById('contactMethod').value,
-        linkedin_url: document.getElementById('linkedinUrl').value.trim(),
-        offered_salary: document.getElementById('offeredSalary').value ? 
-            parseInt(document.getElementById('offeredSalary').value) : null
-    };
     
     try {
         const response = await fetch('/analyze', {
@@ -105,16 +144,16 @@ document.getElementById('analysisForm').addEventListener('submit', async (e) => 
         
         if (response.ok) {
             displayResults(result);
-            showToast('success', 'Analysis complete! Check the results below.');
+            showToast('success', 'ANALYSIS COMPLETE! CHECK THE RESULTS BELOW.');
         } else {
             throw new Error(result.error || 'Analysis failed');
         }
     } catch (error) {
         console.error('Error:', error);
         document.getElementById('loadingCard').style.display = 'none';
-        showToast('error', 'Error: ' + error.message + '. Please try again or train models first.');
+        showToast('error', 'ERROR: ' + error.message.toUpperCase() + '. PLEASE TRY AGAIN OR TRAIN MODELS FIRST.');
     }
-});
+}
 
 // Enhanced results display with animations
 function displayResults(data) {
@@ -131,29 +170,29 @@ function displayResults(data) {
     // Build enhanced results HTML
     let html = `
         <!-- Risk Score with Animation -->
-        <div class="risk-score ${riskClass} animate__animated animate__zoomIn">
+        <div class="risk-score ${riskClass}">
             <div style="font-size: 4rem; font-weight: 900;">${data.risk_score}%</div>
             <div style="font-size: 1.3rem; margin-top: 0.5rem;">${formatRiskTier(data.risk_tier)}</div>
             <div style="font-size: 0.9rem; margin-top: 0.5rem; opacity: 0.9;">
-                <i class="fas fa-shield-alt me-2"></i>Fraud Probability Score
+                <i class="fas fa-shield-alt me-2"></i>FRAUD PROBABILITY SCORE
             </div>
         </div>
         
         <!-- Recommendation with Icon -->
-        <div class="recommendation-box ${riskClass} animate__animated animate__fadeIn">
+        <div class="recommendation-box ${riskClass}">
             <div class="d-flex align-items-center">
                 <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
                 <div>
-                    <strong style="font-size: 1.1rem;">Recommendation</strong>
-                    <p class="mb-0 mt-1">${data.recommendation}</p>
+                    <strong style="font-size: 1.1rem;">RECOMMENDATION</strong>
+                    <p class="mb-0 mt-1">${data.recommendation.toUpperCase()}</p>
                 </div>
             </div>
         </div>
         
         <!-- Download Report Button -->
-        <div class="text-center mb-4 animate__animated animate__fadeIn animate__delay-1s">
+        <div class="text-center mb-4">
             <a href="/download/${data.pdf_report}" class="btn btn-lg btn-dark">
-                <i class="fas fa-file-pdf me-2"></i> Download Forensic Report
+                <i class="fas fa-file-pdf me-2"></i> DOWNLOAD FORENSIC REPORT
             </a>
         </div>
         
@@ -162,18 +201,18 @@ function displayResults(data) {
         <!-- Component Scores -->
         <h5 class="mb-3">
             <i class="fas fa-chart-pie me-2"></i>
-            Risk Component Breakdown
+            RISK COMPONENT BREAKDOWN
         </h5>
         <div class="mb-4">
     `;
     
     // Component scores with progress bars
     const components = [
-        { key: 'ml_probability', icon: 'robot', label: 'ML Model Detection' },
-        { key: 'rule_score', icon: 'flag', label: 'Fraud Pattern Match' },
-        { key: 'company_risk', icon: 'building', label: 'Company Risk' },
-        { key: 'salary_anomaly', icon: 'money-bill-wave', label: 'Salary Anomaly' },
-        { key: 'recruiter_risk', icon: 'user-tie', label: 'Recruiter Risk' }
+        { key: 'ml_probability', icon: 'robot', label: 'ML MODEL DETECTION' },
+        { key: 'rule_score', icon: 'flag', label: 'FRAUD PATTERN MATCH' },
+        { key: 'company_risk', icon: 'building', label: 'COMPANY RISK' },
+        { key: 'salary_anomaly', icon: 'money-bill-wave', label: 'SALARY ANOMALY' },
+        { key: 'recruiter_risk', icon: 'user-tie', label: 'RECRUITER RISK' }
     ];
     
     components.forEach(comp => {
@@ -182,7 +221,7 @@ function displayResults(data) {
         const barClass = percentage > 70 ? 'bg-danger' : percentage > 40 ? 'bg-warning' : 'bg-success';
         
         html += `
-            <div class="component-score animate__animated animate__fadeInLeft">
+            <div class="component-score">
                 <span>
                     <i class="fas fa-${comp.icon} me-2"></i>
                     ${comp.label}
@@ -208,21 +247,21 @@ function displayResults(data) {
     html += `
         <h5 class="mb-3">
             <i class="fas fa-robot me-2"></i>
-            AI Model Detection
+            AI MODEL DETECTION
         </h5>
-        <div class="card bg-light border-0 mb-4">
+        <div class="card bg-dark border-0 mb-4">
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-4 mb-2">
-                        <small class="text-muted">Model Used</small>
-                        <p class="mb-0 fw-bold">${data.ml_result.model || 'Default'}</p>
+                        <small class="text-muted">MODEL USED</small>
+                        <p class="mb-0 fw-bold">${(data.ml_result.model || 'DEFAULT').toUpperCase()}</p>
                     </div>
                     <div class="col-md-4 mb-2">
-                        <small class="text-muted">Scam Probability</small>
+                        <small class="text-muted">SCAM PROBABILITY</small>
                         <p class="mb-0 fw-bold text-danger">${data.ml_result.probability}%</p>
                     </div>
                     <div class="col-md-4 mb-2">
-                        <small class="text-muted">Confidence Level</small>
+                        <small class="text-muted">CONFIDENCE LEVEL</small>
                         <p class="mb-0">
                             <span class="badge ${getConfidenceBadge(data.ml_result.confidence)}">
                                 ${data.ml_result.confidence.toUpperCase()}
@@ -239,18 +278,18 @@ function displayResults(data) {
         html += `
             <h5 class="mb-3">
                 <i class="fas fa-flag me-2"></i>
-                Fraud Pattern Matches (${data.triggered_rules.length})
+                FRAUD PATTERN MATCHES (${data.triggered_rules.length})
             </h5>
         `;
         data.triggered_rules.forEach((rule, index) => {
             html += `
-                <div class="rule-match animate__animated animate__fadeInUp" style="animation-delay: ${index * 0.1}s">
+                <div class="rule-match">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <strong>${formatComponentName(rule.category)}</strong>
                             <p class="mb-0 mt-1 small">"${rule.pattern}"</p>
                         </div>
-                        <span class="badge bg-danger">Severity: ${rule.severity}</span>
+                        <span class="badge bg-danger">SEVERITY: ${rule.severity}</span>
                     </div>
                 </div>
             `;
@@ -263,7 +302,7 @@ function displayResults(data) {
         html += `
             <h5 class="mb-3">
                 <i class="fas fa-lightbulb me-2"></i>
-                Risk Factors Explained (${data.explanations.length})
+                RISK FACTORS EXPLAINED (${data.explanations.length})
             </h5>
         `;
         data.explanations.forEach((exp, index) => {
@@ -273,12 +312,12 @@ function displayResults(data) {
                                 exp.severity === 'medium' ? 'exclamation-triangle' : 'info-circle';
             
             html += `
-                <div class="evidence-item ${severityClass} animate__animated animate__fadeInRight" style="animation-delay: ${index * 0.1}s">
+                <div class="evidence-item ${severityClass}">
                     <div class="d-flex justify-content-between align-items-start">
                         <div class="flex-grow-1">
                             <strong>
                                 <i class="fas fa-${severityIcon} me-2"></i>
-                                ${exp.factor}
+                                ${exp.factor.toUpperCase()}
                             </strong>
                             <p class="mb-0 mt-2">${exp.detail}</p>
                         </div>

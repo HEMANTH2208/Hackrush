@@ -1,12 +1,15 @@
 from flask import Flask, render_template, request, jsonify, send_file
 import os
 from dotenv import load_dotenv
+import requests
+from bs4 import BeautifulSoup
 
 # Import utility modules
 from utils.text_preprocessor import TextPreprocessor
 from utils.fraud_rules import FraudRuleEngine
 from utils.salary_analyzer import SalaryAnalyzer
 from utils.company_verifier import CompanyVerifier
+from utils.mca_verifier import MCAVerifier
 from utils.recruiter_scorer import RecruiterScorer
 from utils.risk_fusion import RiskFusionEngine
 from utils.pdf_generator import ForensicReportGenerator
@@ -25,6 +28,7 @@ preprocessor = TextPreprocessor()
 rule_engine = FraudRuleEngine()
 salary_analyzer = SalaryAnalyzer()
 company_verifier = CompanyVerifier(api_key=os.getenv('OPENCORPORATES_API_KEY'))
+mca_verifier = MCAVerifier()
 recruiter_scorer = RecruiterScorer()
 risk_fusion = RiskFusionEngine()
 pdf_generator = ForensicReportGenerator()
@@ -32,6 +36,31 @@ ml_classifier = MLScamClassifier()
 
 # Try to load pre-trained models
 ml_classifier.load_models()
+
+def extract_text_from_url(url):
+    """Extract job posting text from URL"""
+    try:
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        }
+        response = requests.get(url, headers=headers, timeout=10)
+        soup = BeautifulSoup(response.content, 'html.parser')
+        
+        # Remove script and style elements
+        for script in soup(["script", "style"]):
+            script.decompose()
+        
+        # Get text
+        text = soup.get_text()
+        
+        # Clean up text
+        lines = (line.strip() for line in text.splitlines())
+        chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
+        text = '\n'.join(chunk for chunk in chunks if chunk)
+        
+        return text[:5000]  # Limit to first 5000 characters
+    except Exception as e:
+        raise Exception(f"Failed to extract text from URL: {str(e)}")
 
 @app.route('/')
 def index():
@@ -44,7 +73,27 @@ def analyze_job():
     try:
         # Get input data
         data = request.json
-        job_text = data.get('job_text', '')
+        input_type = data.get('input_type', 'text')  # text, link, whatsapp
+        job_text = ''
+        
+        # Handle different input types
+        if input_type == 'link':
+            job_link = data.get('job_link', '')
+            if not job_link:
+                return jsonify({'error': 'Job link is required'}), 400
+            try:
+                job_text = extract_text_from_url(job_link)
+            except Exception as e:
+                return jsonify({'error': str(e)}), 400
+        elif input_type == 'whatsapp':
+            job_text = data.get('whatsapp_text', '')
+            whatsapp_number = data.get('whatsapp_number', '')
+            # Add WhatsApp context to analysis
+            if whatsapp_number:
+                job_text = f"WhatsApp Number: {whatsapp_number}\n\n{job_text}"
+        else:  # text
+            job_text = data.get('job_text', '')
+        
         company_name = data.get('company_name', '')
         recruiter_email = data.get('recruiter_email', '')
         contact_method = data.get('contact_method', '')
@@ -87,11 +136,25 @@ def analyze_job():
             rule_result = {'triggered_rules': [], 'rule_score': 0, 'high_confidence_scam': False}
             evidence = []
         
-        # 4. Company verification
+        # 4. Company verification (both OpenCorporates and MCA)
         company_result = {'found': False, 'confidence': 50}
+        mca_result = {'found': False, 'confidence': 0}
+        
         if company_name:
             try:
+                # Try OpenCorporates first
                 company_result = company_verifier.verify_company(company_name)
+                
+                # Also try MCA for Indian companies
+                mca_result = mca_verifier.verify_indian_company(company_name)
+                
+                # Combine results - use higher confidence
+                if mca_result['confidence'] > company_result.get('confidence', 0):
+                    company_result = mca_result
+                    company_result['verification_source'] = 'MCA (India)'
+                else:
+                    company_result['verification_source'] = 'OpenCorporates'
+                
                 if recruiter_email:
                     email_match = company_verifier.verify_email_domain(recruiter_email, company_name)
                     company_result['email_match'] = email_match
@@ -141,6 +204,7 @@ def analyze_job():
         
         # Compile final result
         analysis_result = {
+            'input_type': input_type,
             'risk_score': risk_result['risk_score'],
             'risk_tier': risk_result['risk_tier'],
             'recommendation': risk_result['recommendation'],
@@ -149,6 +213,7 @@ def analyze_job():
             'rule_result': rule_result,
             'triggered_rules': rule_result['triggered_rules'],
             'company_verification': company_result,
+            'mca_verification': mca_result if company_name else None,
             'salary_analysis': salary_result,
             'recruiter_score': recruiter_result,
             'explanations': explanations,

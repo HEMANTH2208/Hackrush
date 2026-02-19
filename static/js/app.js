@@ -20,7 +20,7 @@ function showToast(type, message) {
     const toastId = type === 'success' ? 'successToast' : 'errorToast';
     const messageId = type === 'success' ? 'successMessage' : 'errorMessage';
     
-    document.getElementById(messageId).textContent = message.toUpperCase();
+    document.getElementById(messageId).textContent = message;
     const toast = new bootstrap.Toast(document.getElementById(toastId));
     toast.show();
 }
@@ -58,6 +58,12 @@ function loadLegitSample() {
     showToast('success', 'Legitimate example loaded! Click "Analyze for Fraud" to compare.');
 }
 
+// Enhanced form submission for email input
+document.getElementById('emailAnalysisForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    await analyzeJob('email');
+});
+
 // Enhanced form submission for text input
 document.getElementById('textAnalysisForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -81,14 +87,36 @@ async function analyzeJob(inputType) {
     let formData = { input_type: inputType };
     
     // Validate and collect data based on input type
-    if (inputType === 'text') {
+    if (inputType === 'email') {
+        const emailText = document.getElementById('emailText').value.trim();
+        const emailSender = document.getElementById('emailSender').value.trim();
+        const emailSubject = document.getElementById('emailSubject').value.trim();
+        
+        if (!emailText) {
+            showToast('error', 'Please enter email content');
+            return;
+        }
+        if (emailText.length < 20) {
+            showToast('error', 'Email content is too short. Provide more details.');
+            return;
+        }
+        
+        // Combine email parts
+        let fullEmail = '';
+        if (emailSubject) fullEmail += `Subject: ${emailSubject}\n\n`;
+        if (emailSender) fullEmail += `From: ${emailSender}\n\n`;
+        fullEmail += emailText;
+        
+        formData.job_text = fullEmail;
+        formData.recruiter_email = emailSender;
+    } else if (inputType === 'text') {
         const jobText = document.getElementById('jobText').value.trim();
         if (!jobText) {
-            showToast('error', 'PLEASE ENTER JOB DESCRIPTION TEXT');
+            showToast('error', 'Please enter job description text');
             return;
         }
         if (jobText.length < 20) {
-            showToast('error', 'JOB DESCRIPTION IS TOO SHORT. PROVIDE MORE DETAILS.');
+            showToast('error', 'Job description is too short. Provide more details.');
             return;
         }
         
@@ -102,22 +130,22 @@ async function analyzeJob(inputType) {
     } else if (inputType === 'link') {
         const jobLink = document.getElementById('jobLink').value.trim();
         if (!jobLink) {
-            showToast('error', 'PLEASE ENTER JOB POSTING URL');
+            showToast('error', 'Please enter job posting URL');
             return;
         }
         if (!jobLink.startsWith('http')) {
-            showToast('error', 'PLEASE ENTER A VALID URL (STARTING WITH HTTP:// OR HTTPS://)');
+            showToast('error', 'Please enter a valid URL (starting with http:// or https://)');
             return;
         }
         formData.job_link = jobLink;
     } else if (inputType === 'whatsapp') {
         const whatsappText = document.getElementById('whatsappText').value.trim();
         if (!whatsappText) {
-            showToast('error', 'PLEASE ENTER WHATSAPP MESSAGE');
+            showToast('error', 'Please enter WhatsApp message');
             return;
         }
         if (whatsappText.length < 20) {
-            showToast('error', 'WHATSAPP MESSAGE IS TOO SHORT. PROVIDE MORE DETAILS.');
+            showToast('error', 'WhatsApp message is too short. Provide more details.');
             return;
         }
         formData.whatsapp_text = whatsappText;
@@ -144,14 +172,14 @@ async function analyzeJob(inputType) {
         
         if (response.ok) {
             displayResults(result);
-            showToast('success', 'ANALYSIS COMPLETE! CHECK THE RESULTS BELOW.');
+            showToast('success', 'Analysis complete! Check the results below.');
         } else {
             throw new Error(result.error || 'Analysis failed');
         }
     } catch (error) {
         console.error('Error:', error);
         document.getElementById('loadingCard').style.display = 'none';
-        showToast('error', 'ERROR: ' + error.message.toUpperCase() + '. PLEASE TRY AGAIN OR TRAIN MODELS FIRST.');
+        showToast('error', 'Error: ' + error.message + '. Please try again or train models first.');
     }
 }
 
@@ -174,7 +202,7 @@ function displayResults(data) {
             <div style="font-size: 4rem; font-weight: 900;">${data.risk_score}%</div>
             <div style="font-size: 1.3rem; margin-top: 0.5rem;">${formatRiskTier(data.risk_tier)}</div>
             <div style="font-size: 0.9rem; margin-top: 0.5rem; opacity: 0.9;">
-                <i class="fas fa-shield-alt me-2"></i>FRAUD PROBABILITY SCORE
+                <i class="fas fa-shield-alt me-2"></i>Fraud Probability Score
             </div>
         </div>
         
@@ -183,8 +211,8 @@ function displayResults(data) {
             <div class="d-flex align-items-center">
                 <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
                 <div>
-                    <strong style="font-size: 1.1rem;">RECOMMENDATION</strong>
-                    <p class="mb-0 mt-1">${data.recommendation.toUpperCase()}</p>
+                    <strong style="font-size: 1.1rem;">Recommendation</strong>
+                    <p class="mb-0 mt-1">${data.recommendation}</p>
                 </div>
             </div>
         </div>
@@ -192,7 +220,7 @@ function displayResults(data) {
         <!-- Download Report Button -->
         <div class="text-center mb-4">
             <a href="/download/${data.pdf_report}" class="btn btn-lg btn-dark">
-                <i class="fas fa-file-pdf me-2"></i> DOWNLOAD FORENSIC REPORT
+                <i class="fas fa-file-pdf me-2"></i> Download Forensic Report
             </a>
         </div>
         
@@ -201,18 +229,18 @@ function displayResults(data) {
         <!-- Component Scores -->
         <h5 class="mb-3">
             <i class="fas fa-chart-pie me-2"></i>
-            RISK COMPONENT BREAKDOWN
+            Risk Component Breakdown
         </h5>
         <div class="mb-4">
     `;
     
     // Component scores with progress bars
     const components = [
-        { key: 'ml_probability', icon: 'robot', label: 'ML MODEL DETECTION' },
-        { key: 'rule_score', icon: 'flag', label: 'FRAUD PATTERN MATCH' },
-        { key: 'company_risk', icon: 'building', label: 'COMPANY RISK' },
-        { key: 'salary_anomaly', icon: 'money-bill-wave', label: 'SALARY ANOMALY' },
-        { key: 'recruiter_risk', icon: 'user-tie', label: 'RECRUITER RISK' }
+        { key: 'ml_probability', icon: 'robot', label: 'ML Model Detection' },
+        { key: 'rule_score', icon: 'flag', label: 'Fraud Pattern Match' },
+        { key: 'company_risk', icon: 'building', label: 'Company Risk' },
+        { key: 'salary_anomaly', icon: 'money-bill-wave', label: 'Salary Anomaly' },
+        { key: 'recruiter_risk', icon: 'user-tie', label: 'Recruiter Risk' }
     ];
     
     components.forEach(comp => {
@@ -247,21 +275,21 @@ function displayResults(data) {
     html += `
         <h5 class="mb-3">
             <i class="fas fa-robot me-2"></i>
-            AI MODEL DETECTION
+            AI Model Detection
         </h5>
-        <div class="card bg-dark border-0 mb-4">
+        <div class="card bg-light border-0 mb-4">
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-4 mb-2">
-                        <small class="text-muted">MODEL USED</small>
-                        <p class="mb-0 fw-bold">${(data.ml_result.model || 'DEFAULT').toUpperCase()}</p>
+                        <small class="text-muted">Model Used</small>
+                        <p class="mb-0 fw-bold">${(data.ml_result.model || 'Default')}</p>
                     </div>
                     <div class="col-md-4 mb-2">
-                        <small class="text-muted">SCAM PROBABILITY</small>
+                        <small class="text-muted">Scam Probability</small>
                         <p class="mb-0 fw-bold text-danger">${data.ml_result.probability}%</p>
                     </div>
                     <div class="col-md-4 mb-2">
-                        <small class="text-muted">CONFIDENCE LEVEL</small>
+                        <small class="text-muted">Confidence Level</small>
                         <p class="mb-0">
                             <span class="badge ${getConfidenceBadge(data.ml_result.confidence)}">
                                 ${data.ml_result.confidence.toUpperCase()}
@@ -278,7 +306,7 @@ function displayResults(data) {
         html += `
             <h5 class="mb-3">
                 <i class="fas fa-flag me-2"></i>
-                FRAUD PATTERN MATCHES (${data.triggered_rules.length})
+                Fraud Pattern Matches (${data.triggered_rules.length})
             </h5>
         `;
         data.triggered_rules.forEach((rule, index) => {
@@ -289,7 +317,7 @@ function displayResults(data) {
                             <strong>${formatComponentName(rule.category)}</strong>
                             <p class="mb-0 mt-1 small">"${rule.pattern}"</p>
                         </div>
-                        <span class="badge bg-danger">SEVERITY: ${rule.severity}</span>
+                        <span class="badge bg-danger">Severity: ${rule.severity}</span>
                     </div>
                 </div>
             `;
@@ -302,7 +330,7 @@ function displayResults(data) {
         html += `
             <h5 class="mb-3">
                 <i class="fas fa-lightbulb me-2"></i>
-                RISK FACTORS EXPLAINED (${data.explanations.length})
+                Risk Factors Explained (${data.explanations.length})
             </h5>
         `;
         data.explanations.forEach((exp, index) => {
@@ -317,7 +345,7 @@ function displayResults(data) {
                         <div class="flex-grow-1">
                             <strong>
                                 <i class="fas fa-${severityIcon} me-2"></i>
-                                ${exp.factor.toUpperCase()}
+                                ${exp.factor}
                             </strong>
                             <p class="mb-0 mt-2">${exp.detail}</p>
                         </div>
@@ -329,7 +357,7 @@ function displayResults(data) {
         html += `<div class="section-divider"></div>`;
     }
     
-    // Company Verification
+    // Company Verification (MCA + OpenCorporates)
     if (data.company_verification) {
         html += `
             <h5 class="mb-3">
@@ -350,20 +378,32 @@ function displayResults(data) {
                 <div class="row mt-3">
                     <div class="col-md-6 mb-2">
                         <small class="text-muted">Company Name</small>
-                        <p class="mb-0 fw-bold">${cv.company_name}</p>
+                        <p class="mb-0 fw-bold">${cv.company_name || 'N/A'}</p>
                     </div>
                     <div class="col-md-6 mb-2">
                         <small class="text-muted">Status</small>
-                        <p class="mb-0 fw-bold">${cv.status || 'N/A'}</p>
+                        <p class="mb-0 fw-bold">${(cv.status || 'N/A')}</p>
                     </div>
                     <div class="col-md-6 mb-2">
                         <small class="text-muted">Confidence Score</small>
                         <p class="mb-0 fw-bold text-success">${cv.confidence}%</p>
                     </div>
                     <div class="col-md-6 mb-2">
-                        <small class="text-muted">Jurisdiction</small>
-                        <p class="mb-0">${cv.jurisdiction || 'N/A'}</p>
+                        <small class="text-muted">Verification Source</small>
+                        <p class="mb-0">${(cv.verification_source || cv.source || 'Registry')}</p>
                     </div>
+                    ${cv.jurisdiction ? `
+                    <div class="col-md-6 mb-2">
+                        <small class="text-muted">Jurisdiction</small>
+                        <p class="mb-0">${cv.jurisdiction}</p>
+                    </div>
+                    ` : ''}
+                    ${cv.indicators && cv.indicators.length > 0 ? `
+                    <div class="col-12 mb-2">
+                        <small class="text-muted">Indicators</small>
+                        <p class="mb-0">${cv.indicators.map(i => `<span class="badge bg-secondary me-1">${i}</span>`).join('')}</p>
+                    </div>
+                    ` : ''}
                 </div>
             `;
         } else {
@@ -375,7 +415,73 @@ function displayResults(data) {
                 </p>
                 <p class="text-danger mt-3 mb-0">
                     <i class="fas fa-exclamation-triangle me-2"></i>
-                    ${cv.message || 'Company could not be verified in corporate registries'}
+                    ${(cv.message || 'Company could not be verified in corporate registries')}
+                </p>
+            `;
+        }
+        html += `
+                </div>
+            </div>
+        `;
+    }
+    
+    // MCA Verification (if separate from company_verification)
+    if (data.mca_verification && data.mca_verification.confidence > 0) {
+        html += `
+            <h5 class="mb-3">
+                <i class="fas fa-landmark me-2"></i>
+                MCA (India) Verification
+            </h5>
+            <div class="card bg-light border-0 mb-4">
+                <div class="card-body">
+        `;
+        const mca = data.mca_verification;
+        if (mca.found) {
+            html += `
+                <p class="mb-2">
+                    <span class="verification-status verified">
+                        <i class="fas fa-check-circle me-1"></i> Registered with MCA
+                    </span>
+                </p>
+                <div class="row mt-3">
+                    <div class="col-md-6 mb-2">
+                        <small class="text-muted">Company Name</small>
+                        <p class="mb-0 fw-bold">${mca.company_name || 'N/A'}</p>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <small class="text-muted">Confidence</small>
+                        <p class="mb-0 fw-bold text-success">${mca.confidence}%</p>
+                    </div>
+                    ${mca.status ? `
+                    <div class="col-md-6 mb-2">
+                        <small class="text-muted">Status</small>
+                        <p class="mb-0">${mca.status}</p>
+                    </div>
+                    ` : ''}
+                    ${mca.indicators && mca.indicators.length > 0 ? `
+                    <div class="col-12 mb-2">
+                        <small class="text-muted">Indian Company Indicators</small>
+                        <p class="mb-0">${mca.indicators.map(i => `<span class="badge bg-secondary me-1">${i}</span>`).join('')}</p>
+                    </div>
+                    ` : ''}
+                    ${mca.message ? `
+                    <div class="col-12 mb-2">
+                        <small class="text-muted">Details</small>
+                        <p class="mb-0">${mca.message}</p>
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+        } else {
+            html += `
+                <p class="mb-2">
+                    <span class="verification-status not-verified">
+                        <i class="fas fa-times-circle me-1"></i> Not Found in MCA
+                    </span>
+                </p>
+                <p class="text-danger mt-3 mb-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    ${(mca.message || 'Company not registered with Ministry of Corporate Affairs')}
                 </p>
             `;
         }
@@ -432,7 +538,7 @@ function displayResults(data) {
                 <i class="fas fa-user-tie me-2"></i>
                 Recruiter Trust Assessment
             </h5>
-            <div class="card bg-light border-0">
+            <div class="card bg-light border-0 mb-4">
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6 mb-2">
@@ -443,7 +549,7 @@ function displayResults(data) {
                             <small class="text-muted">Trust Level</small>
                             <p class="mb-0">
                                 <span class="badge ${getTrustBadge(data.recruiter_score.trust_level)}">
-                                    ${data.recruiter_score.trust_level.replace('_', ' ')}
+                                    ${data.recruiter_score.trust_level.replace('_', ' ').toUpperCase()}
                                 </span>
                             </p>
                         </div>
@@ -451,6 +557,44 @@ function displayResults(data) {
                 </div>
             </div>
         `;
+    }
+    
+    // Spam Lines Detection
+    if (data.spam_lines && data.spam_lines.length > 0) {
+        html += `
+            <h5 class="mb-3">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                Detected Spam/Scam Lines (${data.spam_lines.length})
+            </h5>
+            <div class="alert alert-danger">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>These lines contain multiple scam indicators and should be treated with extreme caution.</strong>
+            </div>
+        `;
+        
+        data.spam_lines.slice(0, 10).forEach((spam, index) => {
+            const patterns = spam.patterns.slice(0, 5).join(', ');
+            html += `
+                <div class="card border-danger mb-3">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6 class="text-danger mb-0">
+                                <i class="fas fa-flag me-2"></i>
+                                Suspicious Line #${index + 1}
+                            </h6>
+                            <span class="badge bg-danger">Risk Score: ${spam.score}</span>
+                        </div>
+                        <p class="mb-2 p-2" style="background: #FFE5E5; border-left: 3px solid #E74C3C; font-family: monospace;">
+                            "${spam.line}"
+                        </p>
+                        <small class="text-muted">
+                            <i class="fas fa-search me-1"></i>
+                            Matched patterns: <strong>${patterns}</strong>
+                        </small>
+                    </div>
+                </div>
+            `;
+        });
     }
     
     resultsBody.innerHTML = html;
@@ -495,11 +639,11 @@ function getTrustBadge(level) {
 }
 
 // Enhanced train models function
-async function trainModels() {
+async function trainModels(event) {
     const btn = event.target;
     const originalHTML = btn.innerHTML;
     
-    if (!confirm('This will train ML models with sample data. This may take 10-30 seconds. Continue?')) {
+    if (!confirm('This will train ML models with 120 samples (60 scam + 60 legitimate). This may take 30-60 seconds. Continue?')) {
         return;
     }
     
@@ -515,7 +659,7 @@ async function trainModels() {
         const result = await response.json();
         
         if (response.ok) {
-            showToast('success', `Models trained successfully! Best Model: ${result.best_model}`);
+            showToast('success', `Models trained successfully! Best Model: ${result.best_model} | Samples: 120`);
             document.getElementById('navStatusText').textContent = 'Ready ✓';
             document.getElementById('navStatusSpinner').style.display = 'none';
             

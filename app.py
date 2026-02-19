@@ -77,7 +77,10 @@ def analyze_job():
         job_text = ''
         
         # Handle different input types
-        if input_type == 'link':
+        if input_type == 'email':
+            job_text = data.get('job_text', '')
+            recruiter_email = data.get('recruiter_email', '')
+        elif input_type == 'link':
             job_link = data.get('job_link', '')
             if not job_link:
                 return jsonify({'error': 'Job link is required'}), 400
@@ -118,6 +121,7 @@ def analyze_job():
         # 2. ML Classification
         try:
             ml_result = ml_classifier.predict(preprocessed_text)
+            spam_lines = ml_result.get('spam_lines', [])
         except Exception as e:
             print(f"ML classification error: {e}")
             ml_result = {
@@ -126,6 +130,7 @@ def analyze_job():
                 'confidence': 'low',
                 'model': 'default'
             }
+            spam_lines = []
         
         # 3. Rule-based detection
         try:
@@ -217,7 +222,8 @@ def analyze_job():
             'salary_analysis': salary_result,
             'recruiter_score': recruiter_result,
             'explanations': explanations,
-            'evidence': evidence
+            'evidence': evidence,
+            'spam_lines': spam_lines  # Add spam lines to results
         }
         
         # 8. Generate PDF report

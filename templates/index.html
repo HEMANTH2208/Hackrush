@@ -33,9 +33,9 @@
     <div class="hero-section">
         <div class="container text-center">
             <h1 class="display-4 mb-3">
-                <i class="fas fa-shield-alt"></i> DETECT SCAMS INSTANTLY
+                <i class="fas fa-shield-alt"></i> Detect Recruitment Scams Instantly
             </h1>
-            <p class="lead">AI-POWERED FRAUD DETECTION | 85-95% ACCURACY | <5S ANALYSIS</p>
+            <p class="lead">AI-Powered Fraud Detection | 85-95% Accuracy | Analysis in Seconds</p>
         </div>
     </div>
 
@@ -49,7 +49,7 @@
                         <i class="fas fa-info-circle fa-2x me-3"></i>
                         <div class="flex-grow-1">
                             <strong>FIRST TIME SETUP:</strong> Train the ML models to enable fraud detection.
-                            <button class="btn btn-sm btn-dark ms-3" onclick="trainModels()">
+                            <button class="btn btn-sm btn-dark ms-3" onclick="trainModels(event)">
                                 <i class="fas fa-brain me-1"></i> TRAIN MODELS
                             </button>
                         </div>
@@ -71,41 +71,86 @@
                         <!-- Input Type Tabs -->
                         <ul class="nav nav-tabs mb-4" id="inputTypeTabs" role="tablist">
                             <li class="nav-item" role="presentation">
-                                <button class="nav-link active" id="text-tab" data-bs-toggle="tab" data-bs-target="#text-input" type="button">
-                                    <i class="fas fa-align-left me-2"></i>TEXT
+                                <button class="nav-link active" id="email-tab" data-bs-toggle="tab" data-bs-target="#email-input" type="button">
+                                    <i class="fas fa-envelope me-2"></i>Email
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="text-tab" data-bs-toggle="tab" data-bs-target="#text-input" type="button">
+                                    <i class="fas fa-align-left me-2"></i>Text
                                 </button>
                             </li>
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link" id="link-tab" data-bs-toggle="tab" data-bs-target="#link-input" type="button">
-                                    <i class="fas fa-link me-2"></i>LINK
+                                    <i class="fas fa-link me-2"></i>Link
                                 </button>
                             </li>
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link" id="whatsapp-tab" data-bs-toggle="tab" data-bs-target="#whatsapp-input" type="button">
-                                    <i class="fab fa-whatsapp me-2"></i>WHATSAPP
+                                    <i class="fab fa-whatsapp me-2"></i>WhatsApp
                                 </button>
                             </li>
                         </ul>
 
                         <!-- Tab Content -->
                         <div class="tab-content" id="inputTypeContent">
+                            <!-- Email Input (First/Preferred) -->
+                            <div class="tab-pane fade show active" id="email-input" role="tabpanel">
+                                <form id="emailAnalysisForm">
+                                    <div class="mb-4">
+                                        <label class="form-label">
+                                            <i class="fas fa-envelope me-2"></i>
+                                            Email Content *
+                                        </label>
+                                        <textarea 
+                                            class="form-control form-control-lg" 
+                                            id="emailText" 
+                                            rows="10" 
+                                            placeholder="Paste the entire email content here (including subject, body, and sender details)..."
+                                            required></textarea>
+                                        <div class="form-text">
+                                            <i class="fas fa-info-circle me-1"></i>
+                                            Copy and paste the complete email including subject line and sender information
+                                        </div>
+                                    </div>
+
+                                    <div class="row g-3 mb-4">
+                                        <div class="col-md-6">
+                                            <label class="form-label">Sender Email Address (Optional)</label>
+                                            <input type="email" class="form-control" id="emailSender" placeholder="sender@example.com">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Email Subject (Optional)</label>
+                                            <input type="text" class="form-control" id="emailSubject" placeholder="Job Offer - Software Engineer">
+                                        </div>
+                                    </div>
+
+                                    <div class="d-grid">
+                                        <button type="submit" class="btn btn-primary btn-lg">
+                                            <i class="fas fa-search me-2"></i>
+                                            Analyze Email for Fraud
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+
                             <!-- Text Input -->
-                            <div class="tab-pane fade show active" id="text-input" role="tabpanel">
+                            <div class="tab-pane fade" id="text-input" role="tabpanel">
                                 <form id="textAnalysisForm">
                                     <div class="mb-4">
                                         <label class="form-label">
                                             <i class="fas fa-file-alt me-2"></i>
-                                            JOB DESCRIPTION OR MESSAGE *
+                                            Job Description or Message *
                                         </label>
                                         <textarea 
                                             class="form-control form-control-lg" 
                                             id="jobText" 
                                             rows="8" 
-                                            placeholder="PASTE JOB OFFER, WHATSAPP MESSAGE, EMAIL, OR JOB POSTING HERE..."
+                                            placeholder="Paste job offer, WhatsApp message, email, or job posting here..."
                                             required></textarea>
                                         <div class="form-text">
                                             <i class="fas fa-info-circle me-1"></i>
-                                            SUPPORTS TEXT FROM EMAIL, WHATSAPP, TELEGRAM, LINKEDIN, AND JOB PORTALS
+                                            Supports text from email, WhatsApp, Telegram, LinkedIn, and job portals
                                         </div>
                                     </div>
 
@@ -117,48 +162,48 @@
                                             data-bs-toggle="collapse" 
                                             data-bs-target="#advancedOptions">
                                             <i class="fas fa-cog me-2"></i>
-                                            <span id="advancedToggleText">SHOW ADVANCED OPTIONS</span>
+                                            <span id="advancedToggleText">Show Advanced Options</span>
                                             <i class="fas fa-chevron-down ms-2" id="advancedChevron"></i>
                                         </button>
                                     </div>
 
                                     <!-- Advanced Options -->
                                     <div class="collapse" id="advancedOptions">
-                                        <div class="card bg-dark border-0 mb-4">
+                                        <div class="card bg-light border-0 mb-4">
                                             <div class="card-body">
-                                                <h6 class="text-muted mb-3">OPTIONAL: PROVIDE ADDITIONAL DETAILS FOR DEEPER ANALYSIS</h6>
+                                                <h6 class="text-muted mb-3">Optional: Provide additional details for deeper analysis</h6>
                                                 
                                                 <div class="row g-3">
                                                     <div class="col-md-6">
-                                                        <label class="form-label">COMPANY NAME</label>
-                                                        <input type="text" class="form-control" id="companyName" placeholder="E.G., GOOGLE, INFOSYS">
+                                                        <label class="form-label">Company Name</label>
+                                                        <input type="text" class="form-control" id="companyName" placeholder="e.g., Google, Infosys">
                                                     </div>
                                                     
                                                     <div class="col-md-6">
-                                                        <label class="form-label">RECRUITER EMAIL</label>
-                                                        <input type="email" class="form-control" id="recruiterEmail" placeholder="RECRUITER@COMPANY.COM">
+                                                        <label class="form-label">Recruiter Email</label>
+                                                        <input type="email" class="form-control" id="recruiterEmail" placeholder="recruiter@company.com">
                                                     </div>
                                                     
                                                     <div class="col-md-6">
-                                                        <label class="form-label">CONTACT METHOD</label>
+                                                        <label class="form-label">Contact Method</label>
                                                         <select class="form-select" id="contactMethod">
-                                                            <option value="">SELECT...</option>
-                                                            <option value="email">EMAIL</option>
-                                                            <option value="whatsapp">WHATSAPP</option>
-                                                            <option value="telegram">TELEGRAM</option>
-                                                            <option value="phone">PHONE</option>
-                                                            <option value="linkedin">LINKEDIN</option>
+                                                            <option value="">Select...</option>
+                                                            <option value="email">Email</option>
+                                                            <option value="whatsapp">WhatsApp</option>
+                                                            <option value="telegram">Telegram</option>
+                                                            <option value="phone">Phone</option>
+                                                            <option value="linkedin">LinkedIn</option>
                                                         </select>
                                                     </div>
                                                     
                                                     <div class="col-md-6">
-                                                        <label class="form-label">OFFERED SALARY (₹ THOUSANDS/YEAR)</label>
-                                                        <input type="number" class="form-control" id="offeredSalary" placeholder="E.G., 1200 FOR 12 LPA">
+                                                        <label class="form-label">Offered Salary (₹ thousands/year)</label>
+                                                        <input type="number" class="form-control" id="offeredSalary" placeholder="e.g., 1200 for 12 LPA">
                                                     </div>
                                                     
                                                     <div class="col-12">
-                                                        <label class="form-label">LINKEDIN PROFILE URL</label>
-                                                        <input type="url" class="form-control" id="linkedinUrl" placeholder="HTTPS://LINKEDIN.COM/IN/RECRUITER-NAME">
+                                                        <label class="form-label">LinkedIn Profile URL</label>
+                                                        <input type="url" class="form-control" id="linkedinUrl" placeholder="https://linkedin.com/in/recruiter-name">
                                                     </div>
                                                 </div>
                                             </div>
@@ -169,7 +214,7 @@
                                     <div class="d-grid gap-2 mb-3">
                                         <button type="submit" class="btn btn-primary btn-lg">
                                             <i class="fas fa-search me-2"></i>
-                                            ANALYZE FOR FRAUD
+                                            Analyze for Fraud
                                         </button>
                                     </div>
 
@@ -178,13 +223,13 @@
                                         <div class="col-6">
                                             <button type="button" class="btn btn-outline-danger w-100" onclick="loadScamSample()">
                                                 <i class="fas fa-exclamation-triangle me-1"></i>
-                                                TRY SCAM EXAMPLE
+                                                Try Scam Example
                                             </button>
                                         </div>
                                         <div class="col-6">
                                             <button type="button" class="btn btn-outline-success w-100" onclick="loadLegitSample()">
                                                 <i class="fas fa-check-circle me-1"></i>
-                                                TRY LEGITIMATE EXAMPLE
+                                                Try Legitimate Example
                                             </button>
                                         </div>
                                     </div>
@@ -197,24 +242,24 @@
                                     <div class="mb-4">
                                         <label class="form-label">
                                             <i class="fas fa-link me-2"></i>
-                                            JOB POSTING URL *
+                                            Job Posting URL *
                                         </label>
                                         <input 
                                             type="url" 
                                             class="form-control form-control-lg" 
                                             id="jobLink" 
-                                            placeholder="HTTPS://EXAMPLE.COM/JOB-POSTING"
+                                            placeholder="https://example.com/job-posting"
                                             required>
                                         <div class="form-text">
                                             <i class="fas fa-info-circle me-1"></i>
-                                            PASTE LINK FROM NAUKRI, LINKEDIN, INDEED, OR ANY JOB PORTAL
+                                            Paste link from Naukri, LinkedIn, Indeed, or any job portal
                                         </div>
                                     </div>
 
                                     <div class="d-grid">
                                         <button type="submit" class="btn btn-primary btn-lg">
                                             <i class="fas fa-search me-2"></i>
-                                            ANALYZE LINK
+                                            Analyze Link
                                         </button>
                                     </div>
                                 </form>
@@ -226,29 +271,29 @@
                                     <div class="mb-4">
                                         <label class="form-label">
                                             <i class="fab fa-whatsapp me-2"></i>
-                                            WHATSAPP MESSAGE *
+                                            WhatsApp Message *
                                         </label>
                                         <textarea 
                                             class="form-control form-control-lg" 
                                             id="whatsappText" 
                                             rows="8" 
-                                            placeholder="PASTE WHATSAPP MESSAGE HERE..."
+                                            placeholder="Paste WhatsApp message here..."
                                             required></textarea>
                                         <div class="form-text">
                                             <i class="fas fa-info-circle me-1"></i>
-                                            COPY AND PASTE THE ENTIRE WHATSAPP CONVERSATION OR MESSAGE
+                                            Copy and paste the entire WhatsApp conversation or message
                                         </div>
                                     </div>
 
                                     <div class="mb-3">
-                                        <label class="form-label">WHATSAPP NUMBER (OPTIONAL)</label>
+                                        <label class="form-label">WhatsApp Number (Optional)</label>
                                         <input type="tel" class="form-control" id="whatsappNumber" placeholder="+91-XXXXXXXXXX">
                                     </div>
 
                                     <div class="d-grid">
                                         <button type="submit" class="btn btn-primary btn-lg">
                                             <i class="fas fa-search me-2"></i>
-                                            ANALYZE WHATSAPP MESSAGE
+                                            Analyze WhatsApp Message
                                         </button>
                                     </div>
                                 </form>
@@ -372,12 +417,12 @@
     <script>
         // Toggle advanced options text
         document.getElementById('advancedOptions').addEventListener('show.bs.collapse', function () {
-            document.getElementById('advancedToggleText').textContent = 'HIDE ADVANCED OPTIONS';
+            document.getElementById('advancedToggleText').textContent = 'Hide Advanced Options';
             document.getElementById('advancedChevron').classList.remove('fa-chevron-down');
             document.getElementById('advancedChevron').classList.add('fa-chevron-up');
         });
         document.getElementById('advancedOptions').addEventListener('hide.bs.collapse', function () {
-            document.getElementById('advancedToggleText').textContent = 'SHOW ADVANCED OPTIONS';
+            document.getElementById('advancedToggleText').textContent = 'Show Advanced Options';
             document.getElementById('advancedChevron').classList.remove('fa-chevron-up');
             document.getElementById('advancedChevron').classList.add('fa-chevron-down');
         });
